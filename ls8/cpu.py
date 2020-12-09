@@ -67,11 +67,12 @@ class CPU:
                 for line in f:
                     # split on the comment to make numbers accecible
                     comment_split = line.split("#")
-                    num = comment_split[0]
+                    num = comment_split[0].strip()
                     try:
                         # add the number as a binary to the program
                         x = int(num,2)
-                        program.append(x)
+                        self.ram[address] = x
+                        address += 1
                     except:
                         continue
         # error handling if wrong file name
@@ -167,17 +168,30 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+        self.load()
+        self.trace()
         while not self.halted:
             ir = self.ram_read(self.pc)
             operand_a = self.ram_read(self.pc+1)
-            operand_b = self.ram_read(self.pc+2)
+            operand_b = self.ram_read(self.pc + 2)
+            
+            if ir == LDI:
+                self.branchtable[ir](operand_a, operand_b)
+                self.pc += 3
+            elif ir == PRN:
+                  print(self.branchtable[ir](operand_a))
+                  self.pc+=2
+            else:
+                 print("ERROR: Unknown command.")
+                 sys.exit(1)
 
             # Call the branchtable
-            try:
-                self.branchtable[ir](operand_a, operand_b)
-            except:
-                print("ERROR: Unknown command.")
-                sys.exit(1)
+            # try:
+            #     self.branchtable[ir](operand_a, operand_b)
+            #     self.pc += 3
+            # except:
+            #     print("ERROR: Unknown command.")
+            #     sys.exit(1)
 
             # use bit masking and shifting to ignore the pc advance
             # if the pc is set directly
